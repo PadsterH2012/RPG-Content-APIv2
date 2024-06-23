@@ -32,7 +32,6 @@ async def upload_pdf(file: UploadFile = File(...), db: Session = Depends(get_db)
         character_details = generate_content(prompt)
         
         # Parse the character details (this is a simplified example)
-        # You need to implement the logic to parse the character details from the response
         try:
             character_data = json.loads(character_details)
         except json.JSONDecodeError:
