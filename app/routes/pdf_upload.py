@@ -8,8 +8,10 @@ import logging
 import spacy
 import random
 from collections import Counter
+import logging.config
 
-logger = logging.getLogger(__name__)
+logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
+logger = logging.getLogger('app')
 
 router = APIRouter()
 
@@ -28,12 +30,8 @@ def get_summary(text):
     return summary
 
 def consolidate_names(names):
-    # Frequency analysis
     name_counts = Counter(names)
     common_names = [name for name, count in name_counts.items() if count > 1]
-
-    # Contextual matching: Here we would add more sophisticated context matching logic if needed
-    # For simplicity, assume names appearing frequently are significant
     return common_names
 
 def split_text(text, chunk_size=100000):
@@ -58,8 +56,8 @@ async def upload_pdf(file: UploadFile = File(...), db: Session = Depends(get_db)
         
         # Read the PDF file
         pdf_content = await file.read()
-        doc = fitz.Document(stream=pdf_content, filetype="pdf")  # Correct usage of fitz
-
+        doc = fitz.open(stream=pdf_content, filetype="pdf")
+        
         # Extract text from the PDF
         text = ""
         for page in doc:
@@ -83,6 +81,7 @@ async def upload_pdf(file: UploadFile = File(...), db: Session = Depends(get_db)
         # Get book details
         book_details = generate_book_details(text)
         book_details_dict = parse_book_details(book_details)
+        logger.info(f"Book Details: {book_details_dict}")
         
         # Select five random names and generate details
         random_names = random.sample(significant_names, min(5, len(significant_names)))
@@ -90,27 +89,35 @@ async def upload_pdf(file: UploadFile = File(...), db: Session = Depends(get_db)
         for i, name in enumerate(random_names, 1):
             logger.info(f"Agent checking character #{i}: {name}")
             summary = generate_character_details(name)
-            if "I apologize" not in summary:  # If no information found, skip the character
+            if "I apologize" not in summary:
                 detailed_summaries[name] = summary
 
                 # Parse the details and save to the database
                 details_dict = parse_character_details(summary)
-                if 'name' in details_dict and not db.query(Character).filter(Character.name == details_dict['name']).first():
-                    new_character = Character(
-                        name=details_dict.get('name'),
-                        sex=details_dict.get('sex', ''),
-                        age=details_dict.get('age', ''),
-                        traits=details_dict.get('traits', ''),
-                        behaviors=details_dict.get('behaviors', ''),
-                        background=details_dict.get('background', ''),
-                        book_title=book_details_dict.get('book_title', ''),
-                        author=book_details_dict.get('author', ''),
-                        dialogue_examples=details_dict.get('dialogue_examples', ''),
-                        genre=book_details_dict.get('genre', '')
-                    )
-                    db.add(new_character)
-                    db.commit()
-                    db.refresh(new_character)
+                logger.info(f"Parsed Character Details: {details_dict}")
+                character_name = details_dict.get('**name', '')
+                if character_name:
+                    if not db.query(Character).filter(Character.name == character_name).first():
+                        new_character = Character(
+                            name=character_name,
+                            sex=details_dict.get('**sex', ''),
+                            age=details_dict.get('**age', ''),
+                            traits=details_dict.get('**traits', ''),
+                            behaviors=details_dict.get('**behaviors', ''),
+                            background=details_dict.get('**background summary', ''),
+                            book_title=book_details_dict.get('**book title', ''),
+                            author=book_details_dict.get('**author', ''),
+                            dialogue_examples=details_dict.get('**dialogue examples', ''),
+                            genre=book_details_dict.get('**genre', '')
+                        )
+                        db.add(new_character)
+                        db.commit()
+                        db.refresh(new_character)
+                        logger.info(f"Character {new_character.name} added to the database.")
+                    else:
+                        logger.info(f"Character already exists in the database: {character_name}")
+                else:
+                    logger.info(f"Character name is missing or invalid: {details_dict}")
         
         # Get summary of the story
         summary = get_summary(text)

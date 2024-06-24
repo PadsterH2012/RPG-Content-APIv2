@@ -1,3 +1,5 @@
+import logging
+from logging.handlers import RotatingFileHandler
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -6,6 +8,22 @@ from app.routes import character, quest, trait, character_behavior, pdf_upload, 
 from app.database import create_tables
 from app.config import settings
 import os
+
+# Set up logging
+log_formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+
+log_file = "app.log"
+
+file_handler = RotatingFileHandler(log_file, maxBytes=1024*1024*10, backupCount=3)
+file_handler.setFormatter(log_formatter)
+
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(log_formatter)
+
+logging.basicConfig(level=logging.DEBUG,
+                    handlers=[file_handler, console_handler])
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="RPG Content API",
