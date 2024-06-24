@@ -1,4 +1,3 @@
-import os
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -6,6 +5,7 @@ from fastapi.responses import HTMLResponse
 from app.routes import character, quest, trait, character_behavior, pdf_upload
 from app.database import create_tables
 from app.config import settings
+import os  # Import the os module
 
 app = FastAPI(
     title="RPG Content API",
@@ -31,16 +31,3 @@ app.include_router(pdf_upload.router, prefix="/pdf", tags=["pdf"])
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
-
-@app.get("/sample_data")
-async def get_sample_data():
-    return {
-        "characters": [
-            {"id": 1, "name": "Giblo Trellis", "backstory": "A mysterious figure with a dark past."},
-            {"id": 2, "name": "Elara Moonwhisper", "backstory": "An elven mage seeking ancient knowledge."}
-        ],
-        "quests": [
-            {"id": 1, "title": "The Lost Artifact", "description": "Retrieve a powerful artifact from an ancient tomb."},
-            {"id": 2, "title": "Dragon's Lair", "description": "Defeat the dragon terrorizing the nearby village."}
-        ]
-    }

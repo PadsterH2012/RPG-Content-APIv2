@@ -5,10 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RPG Content API</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        h1 { color: #333; }
-        form { margin-bottom: 20px; }
-        #result, #sampleData { border: 1px solid #ddd; padding: 10px; margin-top: 20px; }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        #result {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-top: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .character-summary {
+            background: #fff;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .character-summary h3 {
+            margin-top: 0;
+        }
+        .character-summary ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .character-summary ul li {
+            margin: 5px 0;
+        }
+        #loading {
+            display: none;
+            margin-top: 20px;
+            font-weight: bold;
+            color: #007BFF;
+        }
     </style>
 </head>
 <body>
@@ -17,28 +57,41 @@
         <input type="file" id="pdfFile" accept=".pdf" required>
         <button type="submit">Upload and Parse PDF</button>
     </form>
+    <div id="loading">Processing, please wait...</div>
     <div id="result"></div>
-    <button id="getSampleData">View Sample Data</button>
-    <div id="sampleData"></div>
 
     <script>
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData();
             formData.append('file', document.getElementById('pdfFile').files[0]);
-            
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').innerHTML = '';
+
             const response = await fetch('/pdf/upload_pdf/', {
                 method: 'POST',
                 body: formData
             });
             const data = await response.json();
-            document.getElementById('result').innerHTML = `<h2>Parsed Data:</h2><pre>${JSON.stringify(data, null, 2)}</pre>`;
-        });
 
-        document.getElementById('getSampleData').addEventListener('click', async () => {
-            const response = await fetch('/sample_data');
-            const data = await response.json();
-            document.getElementById('sampleData').innerHTML = `<h2>Sample Data:</h2><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            document.getElementById('loading').style.display = 'none';
+
+            let resultHTML = `<h2>Parsed Data:</h2><div>`;
+            if (data.detailed_summaries) {
+                for (const [name, summary] of Object.entries(data.detailed_summaries)) {
+                    resultHTML += `
+                        <div class="character-summary">
+                            <h3>${name}</h3>
+                            <ul>
+                                ${summary.split('\n').map(line => `<li>${line}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                }
+            }
+            resultHTML += `</div>`;
+            document.getElementById('result').innerHTML = resultHTML;
         });
     </script>
 </body>
