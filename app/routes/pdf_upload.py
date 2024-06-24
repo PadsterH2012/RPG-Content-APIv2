@@ -58,8 +58,8 @@ async def upload_pdf(file: UploadFile = File(...), db: Session = Depends(get_db)
         
         # Read the PDF file
         pdf_content = await file.read()
-        doc = fitz.open(stream=pdf_content, filetype="pdf")
-        
+        doc = fitz.Document(stream=pdf_content, filetype="pdf")  # Correct usage of fitz
+
         # Extract text from the PDF
         text = ""
         for page in doc:
@@ -83,7 +83,6 @@ async def upload_pdf(file: UploadFile = File(...), db: Session = Depends(get_db)
         # Get book details
         book_details = generate_book_details(text)
         book_details_dict = parse_book_details(book_details)
-        logger.info(f"Book Details: {book_details_dict}")
         
         # Select five random names and generate details
         random_names = random.sample(significant_names, min(5, len(significant_names)))
@@ -109,7 +108,6 @@ async def upload_pdf(file: UploadFile = File(...), db: Session = Depends(get_db)
                         dialogue_examples=details_dict.get('dialogue_examples', ''),
                         genre=book_details_dict.get('genre', '')
                     )
-                    logger.info(f"Adding new character to DB: {new_character}")
                     db.add(new_character)
                     db.commit()
                     db.refresh(new_character)

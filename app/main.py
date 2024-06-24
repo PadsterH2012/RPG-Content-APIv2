@@ -1,4 +1,3 @@
-import logging
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -7,9 +6,6 @@ from app.routes import character, quest, trait, character_behavior, pdf_upload, 
 from app.database import create_tables
 from app.config import settings
 import os
-
-# Configure logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 app = FastAPI(
     title="RPG Content API",
