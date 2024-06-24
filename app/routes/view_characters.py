@@ -13,9 +13,17 @@ templates = Jinja2Templates(directory=os.path.join(settings.BASE_DIR, "templates
 @router.get("/view_characters", response_class=HTMLResponse)
 async def view_characters(request: Request, db: Session = Depends(get_db)):
     characters = db.query(Character).all()
-    character_count = db.query(Character).count()
     return templates.TemplateResponse("view_characters.html", {
         "request": request,
-        "characters": characters,
-        "character_count": character_count
+        "characters": characters
+    })
+
+@router.get("/character/{character_id}", response_class=HTMLResponse)
+async def view_character(request: Request, character_id: int, db: Session = Depends(get_db)):
+    character = db.query(Character).filter(Character.id == character_id).first()
+    if not character:
+        return HTMLResponse(content="Character not found", status_code=404)
+    return templates.TemplateResponse("view_character.html", {
+        "request": request,
+        "character": character
     })

@@ -10,7 +10,7 @@ import random
 from collections import Counter
 import logging.config
 
-logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
+logging.config.fileConfig('logging.conf')
 logger = logging.getLogger('app')
 
 router = APIRouter()
@@ -30,6 +30,7 @@ def get_summary(text):
     return summary
 
 def consolidate_names(names):
+    # Frequency analysis
     name_counts = Counter(names)
     common_names = [name for name, count in name_counts.items() if count > 1]
     return common_names
@@ -90,32 +91,28 @@ async def upload_pdf(file: UploadFile = File(...), db: Session = Depends(get_db)
             logger.info(f"Agent checking character #{i}: {name}")
             summary = generate_character_details(name)
             if "I apologize" not in summary:
-                detailed_summaries[name] = summary
-
-                # Parse the details and save to the database
                 details_dict = parse_character_details(summary)
                 logger.info(f"Parsed Character Details: {details_dict}")
-                character_name = details_dict.get('**name', '')
-                if character_name:
-                    if not db.query(Character).filter(Character.name == character_name).first():
+                if 'name' in details_dict and details_dict.get('name'):
+                    if not db.query(Character).filter(Character.name == details_dict['name']).first():
                         new_character = Character(
-                            name=character_name,
-                            sex=details_dict.get('**sex', ''),
-                            age=details_dict.get('**age', ''),
-                            traits=details_dict.get('**traits', ''),
-                            behaviors=details_dict.get('**behaviors', ''),
-                            background=details_dict.get('**background summary', ''),
-                            book_title=book_details_dict.get('**book title', ''),
-                            author=book_details_dict.get('**author', ''),
-                            dialogue_examples=details_dict.get('**dialogue examples', ''),
-                            genre=book_details_dict.get('**genre', '')
+                            name=details_dict.get('name'),
+                            sex=details_dict.get('sex', ''),
+                            age=details_dict.get('age', ''),
+                            traits=details_dict.get('traits', ''),
+                            behaviors=details_dict.get('behaviors', ''),
+                            background=details_dict.get('background', ''),
+                            book_title=book_details_dict.get('book title', ''),
+                            author=book_details_dict.get('author', ''),
+                            dialogue_examples=details_dict.get('dialogue examples', ''),
+                            genre=book_details_dict.get('genre', '')
                         )
                         db.add(new_character)
                         db.commit()
                         db.refresh(new_character)
                         logger.info(f"Character {new_character.name} added to the database.")
                     else:
-                        logger.info(f"Character already exists in the database: {character_name}")
+                        logger.info(f"Character already exists in the database: {details_dict.get('name')}")
                 else:
                     logger.info(f"Character name is missing or invalid: {details_dict}")
         
@@ -135,10 +132,28 @@ async def upload_pdf(file: UploadFile = File(...), db: Session = Depends(get_db)
 
 def parse_character_details(details):
     details_dict = {}
+    current_key = None
+    current_value = []
+
     for line in details.split('\n'):
-        if ':' in line:
-            key, value = line.split(':', 1)
-            details_dict[key.strip().lower()] = value.strip()
+        line = line.strip().replace('**', '')  # Remove asterisks
+        logger.debug(f"Parsing line: {line}")
+        if not line:
+            continue
+        if ':' in line and line.split(':')[0].strip().lower() in ["name", "sex", "age", "traits", "behaviors", "background"]:
+            if current_key and current_value:
+                details_dict[current_key] = ' '.join(current_value).strip()
+                logger.debug(f"Set {current_key} to {' '.join(current_value).strip()}")
+            current_key = line.split(':')[0].strip().lower()
+            current_value = [line.split(':', 1)[1].strip()]
+        else:
+            current_value.append(line.strip())
+
+    if current_key and current_value:
+        details_dict[current_key] = ' '.join(current_value).strip()
+        logger.debug(f"Set {current_key} to {' '.join(current_value).strip()}")
+
+    logger.debug(f"Final parsed details: {details_dict}")
     return details_dict
 
 def parse_book_details(details):
@@ -146,5 +161,5 @@ def parse_book_details(details):
     for line in details.split('\n'):
         if ':' in line:
             key, value = line.split(':', 1)
-            details_dict[key.strip().lower()] = value.strip()
+            details_dict[key.strip().replace('**', '').lower()] = value.strip()
     return details_dict
