@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from typing import List
 from app.database import get_db
 from app.models.character import Character
 from app.schemas.character import CharacterCreate, CharacterUpdate, CharacterResponse
@@ -40,3 +41,7 @@ def delete_character(character_id: int, db: Session = Depends(get_db)):
     db.delete(db_character)
     db.commit()
     return db_character
+
+@router.get("/", response_model=List[CharacterResponse])
+def get_characters(db: Session = Depends(get_db)):
+    return db.query(Character).all()

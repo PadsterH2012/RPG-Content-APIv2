@@ -54,7 +54,7 @@ def parse_character_details(details):
         logger.debug(f"Parsing line: {line}")
         if not line:
             continue
-        if ':' in line and line.split(':')[0].strip().lower() in ["name", "sex", "age", "traits", "behaviors", "background summary"]:
+        if ':' in line and line.split(':')[0].strip().lower() in ["name", "sex", "age", "traits", "behaviors", "background", "dialogue examples"]:
             if current_key and current_value:
                 details_dict[current_key] = ' '.join(current_value).strip()
                 logger.debug(f"Set {current_key} to {' '.join(current_value).strip()}")
@@ -69,3 +69,4 @@ def parse_character_details(details):
 
     logger.debug(f"Final parsed details: {details_dict}")
     return details_dict
+

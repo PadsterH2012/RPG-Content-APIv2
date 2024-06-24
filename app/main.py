@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
-from app.routes import character, quest, trait, character_behavior, pdf_upload, view_characters
+from app.routes import character, quest, trait, character_behavior, pdf_upload, view_characters, character_api, chat, character_chat
 from app.database import create_tables
 from app.config import settings
 import os
@@ -46,6 +46,9 @@ app.include_router(trait.router, prefix="/traits", tags=["traits"])
 app.include_router(character_behavior.router, prefix="/character_behaviors", tags=["character_behaviors"])
 app.include_router(pdf_upload.router, prefix="/pdf", tags=["pdf"])
 app.include_router(view_characters.router, tags=["view_characters"])
+app.include_router(character_api.router, prefix="/api", tags=["api"])
+app.include_router(chat.router, prefix="/chat", tags=["chat"])
+app.include_router(character_chat.router, tags=["character_chat"])
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):

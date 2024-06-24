@@ -15,29 +15,29 @@
         h1, h2 {
             color: #333;
         }
-        ul {
-            list-style-type: none;
+        .character-list {
+            list-style: none;
             padding: 0;
         }
-        li {
-            margin: 5px 0;
+        .character-list li {
+            margin: 10px 0;
+            padding: 10px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        a {
-            color: #007BFF;
+        .character-list a {
             text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
+            color: #333;
         }
     </style>
 </head>
 <body>
     <h1>Characters in Database</h1>
-    <p>Total Characters: {{ characters | length }}</p>
-    <ul>
+    <ul class="character-list">
         {% for character in characters %}
         <li>
-            <a href="/character/{{ character.id }}">{{ character.name }}</a>
+            <a href="/character_chat/{{ character.id }}">{{ character.name }}</a>
         </li>
         {% endfor %}
     </ul>

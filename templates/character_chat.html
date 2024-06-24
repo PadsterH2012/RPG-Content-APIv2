@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with {{ character.name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        h1 {
+            color: #333;
+        }
+        .character-details {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .character-details p {
+            margin: 10px 0;
+        }
+        .chat-box {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .chat-box textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        .chat-box button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chat with {{ character.name }}</h1>
+    <div class="character-details">
+        <p><strong>Sex:</strong> {{ character.sex }}</p>
+        <p><strong>Age:</strong> {{ character.age }}</p>
+        <p><strong>Traits:</strong> {{ character.traits }}</p>
+        <p><strong>Behaviors:</strong> {{ character.behaviors }}</p>
+        <p><strong>Background:</strong> {{ character.background }}</p>
+        <p><strong>Book Title:</strong> {{ character.book_title }}</p>
+        <p><strong>Author:</strong> {{ character.author }}</p>
+        <p><strong>Dialogue Examples:</strong> {{ character.dialogue_examples }}</p>
+        <p><strong>Genre:</strong> {{ character.genre }}</p>
+    </div>
+    <div class="chat-box">
+        <textarea id="user-input" placeholder="Type your message..."></textarea>
+        <button onclick="sendMessage()">Send</button>
+    </div>
+    <div id="chat-output"></div>
+    <script>
+        async function sendMessage() {
+            const userInput = document.getElementById('user-input').value;
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: userInput, character_id: {{ character.id }} })
+            });
+            const data = await response.json();
+            const chatOutput = document.getElementById('chat-output');
+            chatOutput.innerHTML += `<p><strong>You:</strong> ${userInput}</p>`;
+            chatOutput.innerHTML += `<p><strong>${{ character.name }}:</strong> ${data.response}</p>`;
+            document.getElementById('user-input').value = '';
+        }
+    </script>
+</body>
+</html>
