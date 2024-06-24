@@ -3,54 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>View Characters</title>
+    <title>Characters in Database</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
             background-color: #f4f4f9;
+            padding: 20px;
         }
-        h1, h2, h3 {
+        h1 {
+            text-align: center;
             color: #333;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin: 20px 0;
+            background: #fff;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
         }
         th, td {
             padding: 10px;
-            border: 1px solid #ddd;
             text-align: left;
         }
         th {
-            background-color: #f2f2f2;
+            background-color: #007BFF;
+            color: white;
+        }
+        td {
+            vertical-align: top;
         }
     </style>
 </head>
 <body>
     <h1>Characters in Database</h1>
+    <p>Total Characters: {{ character_count }}</p>
     <table>
-        <tr>
-            <th>Name</th>
-            <th>Sex</th>
-            <th>Age</th>
-            <th>Traits</th>
-            <th>Behaviors</th>
-            <th>Background</th>
-        </tr>
-        {% for character in characters %}
-        <tr>
-            <td>{{ character.name }}</td>
-            <td>{{ character.sex }}</td>
-            <td>{{ character.age }}</td>
-            <td>{{ character.traits }}</td>
-            <td>{{ character.behaviors }}</td>
-            <td>{{ character.background }}</td>
-        </tr>
-        {% endfor %}
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Sex</th>
+                <th>Age</th>
+                <th>Traits</th>
+                <th>Behaviors</th>
+                <th>Background</th>
+                <th>Book Title</th>
+                <th>Author</th>
+                <th>Dialogue Examples</th>
+                <th>Genre</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for character in characters %}
+                <tr>
+                    <td>{{ character.name }}</td>
+                    <td>{{ character.sex }}</td>
+                    <td>{{ character.age }}</td>
+                    <td>{{ character.traits }}</td>
+                    <td>{{ character.behaviors }}</td>
+                    <td>{{ character.background }}</td>
+                    <td>{{ character.book_title }}</td>
+                    <td>{{ character.author }}</td>
+                    <td>{{ character.dialogue_examples }}</td>
+                    <td>{{ character.genre }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
     </table>
 </body>
 </html>

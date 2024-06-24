@@ -10,7 +10,7 @@ import os
 router = APIRouter()
 templates = Jinja2Templates(directory=os.path.join(settings.BASE_DIR, "templates"))
 
-@router.get("/view_characters", response_class=HTMLResponse)
+@router.get("/", response_class=HTMLResponse)
 async def view_characters(request: Request, db: Session = Depends(get_db)):
     characters = db.query(Character).all()
     character_count = db.query(Character).count()

@@ -44,6 +44,11 @@ def generate_character_details(name):
     details = generate_content(prompt)
     return details
 
+def generate_book_details(text):
+    prompt = f"Provide the book title, author, and genre of the following text: {text}"
+    details = generate_content(prompt)
+    return details
+
 @router.post("/upload_pdf/")
 async def upload_pdf(file: UploadFile = File(...), db: Session = Depends(get_db)):
     logger.info("Upload started.")
@@ -75,6 +80,11 @@ async def upload_pdf(file: UploadFile = File(...), db: Session = Depends(get_db)
         significant_names = consolidate_names(names)
         logger.info(f"Significant Names: {significant_names}")
         
+        # Get book details
+        book_details = generate_book_details(text)
+        book_details_dict = parse_book_details(book_details)
+        logger.info(f"Book Details: {book_details_dict}")
+        
         # Select five random names and generate details
         random_names = random.sample(significant_names, min(5, len(significant_names)))
         detailed_summaries = {}
@@ -93,8 +103,13 @@ async def upload_pdf(file: UploadFile = File(...), db: Session = Depends(get_db)
                         age=details_dict.get('age', ''),
                         traits=details_dict.get('traits', ''),
                         behaviors=details_dict.get('behaviors', ''),
-                        background=details_dict.get('background', '')
+                        background=details_dict.get('background', ''),
+                        book_title=book_details_dict.get('book_title', ''),
+                        author=book_details_dict.get('author', ''),
+                        dialogue_examples=details_dict.get('dialogue_examples', ''),
+                        genre=book_details_dict.get('genre', '')
                     )
+                    logger.info(f"Adding new character to DB: {new_character}")
                     db.add(new_character)
                     db.commit()
                     db.refresh(new_character)
@@ -114,6 +129,14 @@ async def upload_pdf(file: UploadFile = File(...), db: Session = Depends(get_db)
         raise HTTPException(status_code=500, detail="Internal server error")
 
 def parse_character_details(details):
+    details_dict = {}
+    for line in details.split('\n'):
+        if ':' in line:
+            key, value = line.split(':', 1)
+            details_dict[key.strip().lower()] = value.strip()
+    return details_dict
+
+def parse_book_details(details):
     details_dict = {}
     for line in details.split('\n'):
         if ':' in line:
