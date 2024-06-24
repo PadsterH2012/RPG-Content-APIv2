@@ -2,6 +2,7 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.ollama_client import generate_content
+from app.models.character import Character
 import fitz  # PyMuPDF
 import logging
 import spacy
@@ -82,6 +83,21 @@ async def upload_pdf(file: UploadFile = File(...), db: Session = Depends(get_db)
             summary = generate_character_details(name)
             if "I apologize" not in summary:  # If no information found, skip the character
                 detailed_summaries[name] = summary
+
+                # Parse the details and save to the database
+                details_dict = parse_character_details(summary)
+                if 'name' in details_dict and not db.query(Character).filter(Character.name == details_dict['name']).first():
+                    new_character = Character(
+                        name=details_dict.get('name'),
+                        sex=details_dict.get('sex', ''),
+                        age=details_dict.get('age', ''),
+                        traits=details_dict.get('traits', ''),
+                        behaviors=details_dict.get('behaviors', ''),
+                        background=details_dict.get('background', '')
+                    )
+                    db.add(new_character)
+                    db.commit()
+                    db.refresh(new_character)
         
         # Get summary of the story
         summary = get_summary(text)
@@ -96,3 +112,11 @@ async def upload_pdf(file: UploadFile = File(...), db: Session = Depends(get_db)
     except Exception as e:
         logger.error(f"Error processing PDF: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
+def parse_character_details(details):
+    details_dict = {}
+    for line in details.split('\n'):
+        if ':' in line:
+            key, value = line.split(':', 1)
+            details_dict[key.strip().lower()] = value.strip()
+    return details_dict
